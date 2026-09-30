@@ -374,12 +374,92 @@ function closePreview() {
 
 /* ================= 表单引擎 ================= */
 /* 字段类型: text/textarea/number/date/time/select/multiselect/bool/photo/catRef/foodRef */
+/* ================= 可搜索食物选择器（通用组件） ================= */
+function foodSearchHTML(hiddenName, hiddenValue, placeholder) {
+  const fd = hiddenValue ? getFood(hiddenValue) : null;
+  const displayName = fd ? fd.name + (fd.brand ? '（' + fd.brand + '）' : '') : '';
+  return `<div class="food-search" data-name="${hiddenName}">
+    <input type="text" placeholder="${placeholder || '搜索食物名称…'}" value="${esc(displayName)}" autocomplete="off"
+      onfocus="foodSearchOpen(this)" oninput="foodSearchFilter(this)" onkeydown="foodSearchKey(this,event)">
+    <input type="hidden" name="${hiddenName}" value="${hiddenValue || ''}">
+    <div class="food-search-dd"></div>
+  </div>`;
+}
+function _foodSearchList(q) {
+  const low = (q || '').toLowerCase();
+  return DB.foods.filter(fd => {
+    if (!low) return true;
+    return fd.name.toLowerCase().indexOf(low) >= 0
+      || (fd.brand || '').toLowerCase().indexOf(low) >= 0
+      || (fd.category || '').toLowerCase().indexOf(low) >= 0;
+  });
+}
+function foodSearchOpen(el) {
+  foodSearchFilter(el);
+}
+function foodSearchFilter(el) {
+  const wrap = el.closest('.food-search');
+  const dd = wrap.querySelector('.food-search-dd');
+  const q = el.value.trim();
+  const list = _foodSearchList(q);
+  if (!list.length) {
+    dd.innerHTML = `<div class="food-search-empty">无匹配食物<br><span class="link" onclick="closeModal();go('foods')">去食物数据库添加</span></div>`;
+  } else {
+    dd.innerHTML = list.map(fd =>
+      `<div class="food-search-item" data-id="${fd.id}" onclick="foodSearchPick(this)"><span>${esc(fd.name)}${fd.brand ? '<span class="brand">' + esc(fd.brand) + '</span>' : ''}</span><span class="cat-tag">${esc(fd.category || '')}</span></div>`
+    ).join('');
+  }
+  dd.classList.add('open');
+  /* 高亮当前选中 */
+  const hid = wrap.querySelector('input[type=hidden]');
+  if (hid && hid.value) {
+    const cur = dd.querySelector(`[data-id="${hid.value}"]`);
+    if (cur) cur.classList.add('active');
+  }
+}
+function foodSearchPick(item) {
+  const wrap = item.closest('.food-search');
+  const hid = wrap.querySelector('input[type=hidden]');
+  const txt = wrap.querySelector('input[type=text]');
+  const fd = getFood(item.dataset.id);
+  hid.value = item.dataset.id;
+  txt.value = fd ? fd.name + (fd.brand ? '（' + fd.brand + '）' : '') : '';
+  wrap.querySelector('.food-search-dd').classList.remove('open');
+  /* 触发 change 事件，让 feedRow 同步 */
+  hid.dispatchEvent(new Event('change', { bubbles: true }));
+  txt.dispatchEvent(new Event('change', { bubbles: true }));
+}
+function foodSearchKey(el, e) {
+  const dd = el.closest('.food-search').querySelector('.food-search-dd');
+  if (!dd.classList.contains('open')) return;
+  const items = [...dd.querySelectorAll('.food-search-item')];
+  if (!items.length) return;
+  let idx = items.findIndex(it => it.classList.contains('active'));
+  if (e.key === 'ArrowDown') { e.preventDefault(); idx = idx < items.length - 1 ? idx + 1 : 0; items.forEach(it => it.classList.remove('active')); items[idx].classList.add('active'); items[idx].scrollIntoView({ block: 'nearest' }); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); idx = idx > 0 ? idx - 1 : items.length - 1; items.forEach(it => it.classList.remove('active')); items[idx].classList.add('active'); items[idx].scrollIntoView({ block: 'nearest' }); }
+  else if (e.key === 'Enter') { e.preventDefault(); const cur = items[idx]; if (cur) foodSearchPick(cur); }
+  else if (e.key === 'Escape') { dd.classList.remove('open'); }
+}
+/* 点击外部关闭下拉 */
+document.addEventListener('click', e => {
+  if (!e.target.closest('.food-search')) {
+    document.querySelectorAll('.food-search-dd.open').forEach(dd => dd.classList.remove('open'));
+    /* 清空未确认的输入：如果文本框有内容但 hidden 无值，说明用户输入了但没选，恢复为空 */
+    document.querySelectorAll('.food-search').forEach(wrap => {
+      const txt = wrap.querySelector('input[type=text]');
+      const hid = wrap.querySelector('input[type=hidden]');
+      if (txt === document.activeElement) return;
+      if (!hid.value && txt.value) { txt.value = ''; }
+      else if (hid.value) { const fd = getFood(hid.value); txt.value = fd ? fd.name + (fd.brand ? '（' + fd.brand + '）' : '') : ''; }
+    });
+  }
+});
+
 /* ================= 一顿多食物：饮食批量表单（新增专用；编辑单条仍走原表单） ================= */
 let _feedRows = [{ foodId: '', grams: '' }];
 function feedRowHTML(row, i) {
-  const opts = DB.foods.map(fd => `<option value="${fd.id}" ${row.foodId === fd.id ? 'selected' : ''}>${esc(fd.name)}${fd.brand ? '（' + esc(fd.brand) + '）' : ''}</option>`).join('');
   return `<div class="feed-row">
-    <select onchange="_feedRows[${i}].foodId=this.value"><option value="">选择食物</option>${opts}</select>
+    ${foodSearchHTML('feedFood_' + i, row.foodId, '搜索食物…')}
     <input type="number" inputmode="decimal" step="any" placeholder="克重" value="${esc(row.grams)}" oninput="_feedRows[${i}].grams=this.value">
     <span class="feed-unit">g</span>
     <button type="button" class="btn btn-ghost btn-sm" onclick="feedDelRow(${i})">✕</button>
@@ -433,7 +513,12 @@ function submitFeedForm() {
   const time = (val('feedTimeH') || '') + ':' + (val('feedTimeM') || '');
   const meal = val('feedMeal'); const finish = val('feedFinish'); const notes = val('feedNotes');
   const waterMl = parseFloat(val('feedWater')) || 0;
-  const valid = _feedRows.filter(r => r.foodId && parseFloat(r.grams) > 0);
+  const valid = [];
+  _feedRows.forEach((r, i) => {
+    const hid = document.querySelector(`input[name="feedFood_${i}"]`);
+    if (hid && hid.value) r.foodId = hid.value;  /* DOM 优先（搜索选择器更新了 hidden input） */
+    if (r.foodId && parseFloat(r.grams) > 0) valid.push({ foodId: r.foodId, grams: r.grams });
+  });
   if (!valid.length) { toast('请至少填写一行：选择食物并输入克重'); return; }
   const now = Date.now();
   valid.forEach((r, idx) => {
@@ -590,9 +675,8 @@ function fieldHTML(f) {
       return label + `<select name="${f.k}">` + (DB.cats.length ? '' : '<option value="">（请先创建猫咪档案）</option>') +
         DB.cats.map(c => `<option value="${c.id}" ${v === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('') + '</select>';
     case 'foodRef':
-      return label + `<select name="${f.k}"><option value="">请选择食物</option>` +
-        DB.foods.map(fd => `<option value="${fd.id}" ${v === fd.id ? 'selected' : ''}>${esc(fd.name)}${fd.brand ? '（' + esc(fd.brand) + '）' : ''}</option>`).join('') +
-        `</select><div class="f-hint">找不到？请先到「食物数据库」新增 <span class="link" onclick="closeModal();go('foods')">去添加</span></div>`;
+      return label + foodSearchHTML(f.k, v || '', '搜索食物名称…') +
+        `<div class="f-hint">找不到？请先到「食物数据库」新增 <span class="link" onclick="closeModal();go('foods')">去添加</span></div>`;
     case 'metricRows':
       return metricRowsHTML(f);
     case 'report':
