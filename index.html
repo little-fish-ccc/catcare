@@ -6,15 +6,15 @@
 <title>猫猫日常与健康管理工作台</title>
 <meta name="description" content="猫咪日常记录、健康追踪、营养摄入与体检档案管理">
 <!-- PWA -->
-<link rel="manifest" href="manifest.json?v=20260930b">
+<link rel="manifest" href="manifest.json?v=20260930c">
 <meta name="theme-color" content="#8fbf9f">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="猫猫工作台">
-<link rel="icon" href="icons/favicon.png?v=20260930b">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=20260930b">
-<link rel="stylesheet" href="style.css?v=20260930b">
+<link rel="icon" href="icons/favicon.png?v=20260930c">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=20260930c">
+<link rel="stylesheet" href="style.css?v=20260930c">
 </head>
 <body>
 <div id="app">
@@ -77,16 +77,16 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
-<script src="js/core.js?v=20260930b"></script>
-<script src="js/schemas.js?v=20260930b"></script>
-<script src="js/pages.js?v=20260930b"></script>
-<script src="js/stats.js?v=20260930b"></script>
-<script src="js/main.js?v=20260930b"></script>
+<script src="js/core.js?v=20260930c"></script>
+<script src="js/schemas.js?v=20260930c"></script>
+<script src="js/pages.js?v=20260930c"></script>
+<script src="js/stats.js?v=20260930c"></script>
+<script src="js/main.js?v=20260930c"></script>
 <script>
 /* 注册 Service Worker：离线可用 + 后台自动更新（无需手动硬刷） */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js?v=20260930b').then(reg => {
+    navigator.serviceWorker.register('sw.js?v=20260930c').then(reg => {
       /* 有新版本就装好待用，下次打开自动生效；不打断当前操作 */
       reg.addEventListener('updatefound', () => {
         const sw = reg.installing;
