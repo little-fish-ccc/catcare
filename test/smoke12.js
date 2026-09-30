@@ -39,11 +39,11 @@ const d1 = ym + '-01';
 const d15 = ym + '-15';
 const d30 = ym + '-' + String(Math.min(30, lastDayD)).padStart(2, '0');
 DB.careRecords.push({ id: 'r1', catId: 'c1', planId: 'pM', date: d1 }); // 完成本月1号
-ok(w.isPlanDay(plan, T) === true, '完成1号后，15/30未完成仍待办');
+ok(w.isPlanDay(plan, d15) === true, '完成1号后，15/30未完成仍待办（以15号视角判断）');
 DB.careRecords.push({ id: 'r2', catId: 'c1', planId: 'pM', date: d15 }); // 完成本月15号
-ok(w.isPlanDay(plan, T) === true, '完成15号后，30号未完成仍待办');
+ok(w.isPlanDay(plan, d30) === true, '完成15号后，30号未完成仍待办（以30号视角判断）');
 DB.careRecords.push({ id: 'r3', catId: 'c1', planId: 'pM', date: d30 }); // 完成本月30号
-ok(w.isPlanDay(plan, T) === false, '1/15/30全部完成后，本月不再待办');
+ok(w.isPlanDay(plan, d30) === false, '1/15/30全部完成后，本月不再待办');
 
 // 4. 提前记录(早于调度日)不计入当月该日完成
 const plan2 = { id: 'pM2', catId: 'c1', continuous: true, startDate: sd, endDate: ed, schedType: '按月', monthDays: ['每月15号'], paused: false, name: '半月护理' };

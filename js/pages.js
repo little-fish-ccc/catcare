@@ -214,9 +214,19 @@ const LIST_CONFIG = {
       const catText = byCat.length
         ? byCat.map(c => `${esc(c.category)} ${fmt(c.grams)}g`).join(' · ')
         : '无';
+      /* 总水分 = 食物含水量 + 当日主动饮水（同一猫咪范围） */
+      const day = list.length ? list[0].date : '';
+      const extraWater = (DB.water || []).reduce((s, r) => (r.date === day && (!catId || r.catId === catId) ? s + num(r.amount) : s), 0);
+      let waterText;
+      if (extraWater > 0) {
+        const base = `总水分${fmt(tt.water + extraWater)}g（其中食物含水量${fmt(tt.water)}g`;
+        waterText = tg.water > 0 ? `${base}，目标${fmt(tg.water)}）` : `${base}）`;
+      } else {
+        waterText = `总水分${fmt(tt.water)}g` + (tg.water > 0 ? `（目标${fmt(tg.water)}）` : '');
+      }
       const parts = [
         `分类克重：${catText}`,
-        `水分${fmt(tt.water)}g${tgt('water', 'g')}`,
+        waterText,
         `${fmt(tt.kcal)}kcal${tgt('kcal', 'kcal')}`,
         `蛋白${fmt(tt.protein)}g${tgt('protein', 'g')}`,
         `脂肪${fmt(tt.fat)}g`,

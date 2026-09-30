@@ -64,7 +64,7 @@ ok(/干粮 3g/.test(dhtml), '分类克重含「干粮 3g」');
 ok(/生骨肉 20g/.test(dhtml), '分类克重含「生骨肉 20g」');
 ok(!/当日合计：80g|当日合计 80g/.test(dhtml), '不再显示直接相加的总克重(80g)');
 /* 总水分 = 食物含水量合计：罐头100g×80%=80 + 干粮3g×8%=0.24 + 生骨肉20g×5%=1.0 → 81.24g */
-ok(/水分81\.2g/.test(dhtml), '显示总水分(含食物含水量)=81.24g');
+ok(/总水分81\.2g/.test(dhtml), '显示总水分(含食物含水量)=81.24g');
 ok(!/kJ|千焦|≈/.test(dhtml), '不显示千焦(kJ)');
 
 // 4. 水/热量/蛋白质后有目标值括号标注
@@ -73,10 +73,18 @@ DB.targets['c1'] = { water: 200, kcal: 250, protein: 30 };
 const el3 = w.document.createElement('div');
 w.__renderListPage(el3, 'feed');
 const t3 = el3.innerHTML;
-ok(/水分[^·]*（目标200g）/.test(t3), '水分后标注目标值（目标200g）');
+ok(/总水分[^·]*（目标200）/.test(t3), '无饮水时：总水分81.2g（目标200）');
 ok(/kcal（目标250kcal）/.test(t3), '热量后标注目标值（目标250kcal）');
 ok(/蛋白[^·]*（目标30g）/.test(t3), '蛋白质后标注目标值（目标30g）');
 ok(!/水分[^·]*（目标[^）]*g）[^·]*（目标/.test(t3), '每项目标值只标注一次');
+
+// 4b. 有饮水时：总水分 = 食物水 + 饮水，格式「总水分Xg（其中食物含水量Yg，目标200）」
+DB.water.push({ id: 'w1', catId: 'c1', date: td, amount: 18.8 });
+const el4 = w.document.createElement('div');
+w.__renderListPage(el4, 'feed');
+const t4 = el4.innerHTML;
+/* 食物水 81.24 + 饮水 18.8 = 100.04 → fmt=100 */
+ok(/总水分100g（其中食物含水量81\.2g，目标200）/.test(t4), '有饮水：总水分100g（其中食物含水量81.2g，目标200）');
 
 // 5. 月度摄入日历（去 kJ、分类克重）
 w.__showFeedMonthCalendar('');
