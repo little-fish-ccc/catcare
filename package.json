@@ -1,0 +1,12 @@
+{
+  "name": "catcare",
+  "version": "20260930b",
+  "private": true,
+  "description": "猫猫日常与健康管理工作台（纯前端 SPA，localStorage + IndexedDB）",
+  "scripts": {
+    "test": "for f in test/smoke*.js; do node $f || exit 1; done"
+  },
+  "devDependencies": {
+    "jsdom": "^24.0.0"
+  }
+}

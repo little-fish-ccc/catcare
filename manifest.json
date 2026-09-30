@@ -1,0 +1,22 @@
+{
+  "name": "猫猫日常与健康管理工作台",
+  "short_name": "猫猫工作台",
+  "description": "猫咪日常记录、健康追踪、营养摄入与体检档案管理，数据保存在本机浏览器",
+  "lang": "zh-CN",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f7f4ee",
+  "theme_color": "#8fbf9f",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "记录饮食", "url": "./index.html#/feed", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "健康事件", "url": "./index.html#/health", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "首页", "url": "./index.html#/home", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>猫猫日常与健康管理工作台</title>
+<meta name="description" content="猫咪日常记录、健康追踪、营养摄入与体检档案管理">
+<!-- PWA -->
+<link rel="manifest" href="manifest.json?v=20260930b">
+<meta name="theme-color" content="#8fbf9f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="猫猫工作台">
+<link rel="icon" href="icons/favicon.png?v=20260930b">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=20260930b">
+<link rel="stylesheet" href="style.css?v=20260930b">
+</head>
+<body>
+<div id="app">
+  <!-- 顶栏 -->
+  <header id="topbar">
+    <button id="menuBtn" class="icon-btn" title="菜单">☰</button>
+    <div class="brand">🐾 猫猫工作台</div>
+    <div class="top-right">
+      <select id="globalCat" title="选择猫咪"></select>
+      <button id="dataBtn" class="top-btn" title="数据备份与恢复" onclick="openDataModal()">⚙️</button>
+    </div>
+  </header>
+
+  <!-- 侧边导航（桌面） / 抽屉（移动） -->
+  <nav id="sidenav">
+    <div class="nav-group-title">概览</div>
+    <a data-page="home" class="nav-item">🏠 首页仪表盘</a>
+    <a data-page="stats" class="nav-item">📊 统计分析</a>
+    <div class="nav-group-title">日常记录</div>
+    <a data-page="feed" class="nav-item">🍚 饮食记录</a>
+    <a data-page="status" class="nav-item">😺 每日状态</a>
+    <a data-page="excrete" class="nav-item">💩 排泄记录</a>
+    <a data-page="urine" class="nav-item">🚽 尿比重记录</a>
+    <a data-page="weight" class="nav-item">⚖️ 体重记录</a>
+    <a data-page="water" class="nav-item">💧 饮水记录</a>
+    <a data-page="interaction" class="nav-item">💞 互动记录</a>
+    <div class="nav-group-title">健康管理</div>
+    <a data-page="health" class="nav-item">🩺 健康事件</a>
+    <a data-page="med" class="nav-item">💊 用药情况</a>
+    <a data-page="care" class="nav-item">🧼 日常护理</a>
+    <a data-page="deworm" class="nav-item">🐛 驱虫管理</a>
+    <a data-page="checkup" class="nav-item">🧪 体检/复查</a>
+    <a data-page="vet" class="nav-item">🏥 就医与检查</a>
+    <a data-page="allergy" class="nav-item">🚫 过敏/禁忌</a>
+    <a data-page="careTip" class="nav-item">💡 养护小tips</a>
+    <div class="nav-group-title">基础档案</div>
+    <a data-page="cats" class="nav-item">🐱 猫咪档案</a>
+    <a data-page="healthArchive" class="nav-item">📁 健康档案</a>
+    <a data-page="foods" class="nav-item">🥫 食物数据库</a>
+  </nav>
+  <div id="navMask"></div>
+
+  <!-- 主内容 -->
+  <main id="main"></main>
+
+  <!-- 移动端底部导航 -->
+  <nav id="bottomnav">
+    <a data-page="home"><span>🏠</span>首页</a>
+    <a data-page="feed"><span>🍚</span>饮食</a>
+    <a id="quickAddBtn" class="fab-slot"><span class="fab">＋</span></a>
+    <a data-page="health"><span>🩺</span>健康</a>
+    <a data-page="stats"><span>📊</span>统计</a>
+  </nav>
+</div>
+
+<!-- 弹窗容器 -->
+<div id="modalRoot"></div>
+<div id="previewRoot"></div>
+<div id="toastRoot"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+<script src="js/core.js?v=20260930b"></script>
+<script src="js/schemas.js?v=20260930b"></script>
+<script src="js/pages.js?v=20260930b"></script>
+<script src="js/stats.js?v=20260930b"></script>
+<script src="js/main.js?v=20260930b"></script>
+<script>
+/* 注册 Service Worker：离线可用 + 后台自动更新（无需手动硬刷） */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js?v=20260930b').then(reg => {
+      /* 有新版本就装好待用，下次打开自动生效；不打断当前操作 */
+      reg.addEventListener('updatefound', () => {
+        const sw = reg.installing;
+        if (!sw) return;
+        sw.addEventListener('statechange', () => {
+          if (sw.state === 'installed' && navigator.serviceWorker.controller) {
+            console.log('[PWA] 新版本已就绪，下次打开自动生效');
+          }
+        });
+      });
+    }).catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
