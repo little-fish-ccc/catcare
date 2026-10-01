@@ -171,7 +171,7 @@ textarea{resize:vertical;min-height:64px}
 .f-label .req{color:var(--red)}
 .f-inline{display:flex;gap:8px;align-items:center}
 .f-inline input[type=date]{flex:1;min-width:0}
-.f-inline select{flex:0 0 52px;width:52px;min-width:52px}
+.f-inline select{flex:0 0 68px;width:68px;min-width:68px}
 .f-hint{font-size:.74rem;color:var(--ink-3);margin-top:3px}
 .f-quick{display:flex;gap:8px;margin-top:6px}
 /* 一顿多食物：饮食批量表单行 */

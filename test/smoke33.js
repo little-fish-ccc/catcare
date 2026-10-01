@@ -20,7 +20,7 @@ let pass = 0, fail = 0;
 function ok(c, m) { if (c) { pass++; console.log('✓ ' + m); } else { fail++; console.log('✗ ' + m); } }
 
 const bundle = fs.readFileSync(root + '/js/core.js', 'utf8') + '\n' + fs.readFileSync(root + '/js/schemas.js', 'utf8') + '\n' + fs.readFileSync(root + '/js/pages.js', 'utf8') + '\n' + fs.readFileSync(root + '/js/stats.js', 'utf8') + '\n' + fs.readFileSync(root + '/js/main.js', 'utf8');
-w.eval(bundle + '\n;window.__openForm=openForm;window.__openFeedForm=openFeedForm;window.__feedAddRow=feedAddRow;window.__feedDelRow=feedDelRow;window.__submitFeedForm=submitFeedForm;window.__getFeedRows=()=>_feedRows;window.__setFeedRows=a=>{_feedRows=a;};window.__feedTotals=feedTotals;window.__feedTotalsByCategory=feedTotalsByCategory;window.__DB=DB;window.__today=today;window.__renderHome=renderHome;');
+w.eval(bundle + '\n;window.__openForm=openForm;window.__openFeedForm=openFeedForm;window.__feedAddRow=feedAddRow;window.__feedDelRow=feedDelRow;window.__submitFeedForm=submitFeedForm;window.__getFeedRows=()=>_feedRows;window.__setFeedRows=a=>{_feedRows=a;};window.__feedRenderRows=feedRenderRows;window.__feedTotals=feedTotals;window.__feedTotalsByCategory=feedTotalsByCategory;window.__DB=DB;window.__today=today;window.__renderHome=renderHome;');
 const DB = w.__DB;
 DB.cats.push({ id: 'c1', name: '咪咪', photo: [] });
 DB.settings.selectedCat = 'c1';
@@ -94,6 +94,19 @@ w.__setFeedRows([{ foodId: 'f1', grams: '50' }]);
 w.__submitFeedForm();
 const wBefore = DB.water.length;
 ok(DB.water.length === wBefore, '未填加水 → 不生成饮水记录');
+
+/* 8. 已选食物后加行/删行，已选内容不丢失（隐藏 input 同步回数据模型） */
+w.__openFeedForm();
+w.__setFeedRows([{ foodId: '', grams: '' }, { foodId: '', grams: '' }, { foodId: '', grams: '' }]);
+w.__feedRenderRows();
+w.document.querySelector('input[name="feedFood_0"]').value = 'f1';  // 模拟第1行选了鸡肉罐
+w.document.querySelector('input[name="feedFood_2"]').value = 'f2';  // 模拟第3行选了低敏粮
+w.__feedAddRow();  // 加第4行
+ok(w.document.querySelector('input[name="feedFood_0"]').value === 'f1', '加行后第1行已选食物保留');
+ok(w.document.querySelector('input[name="feedFood_2"]').value === 'f2', '加行后第3行已选食物保留');
+w.__feedDelRow(1);  // 删第2行（空行），3号行重编号为2→1
+ok(w.document.querySelector('input[name="feedFood_0"]').value === 'f1', '删行后第1行已选食物保留');
+ok(w.document.querySelector('input[name="feedFood_1"]').value === 'f2', '删行后原第3行重编号且食物保留');
 
 console.log(`\nsmoke33: ${pass}/${pass + fail} 通过${fail ? '（失败 ' + fail + '）' : ''}`);
 process.exit(fail ? 1 : 0);

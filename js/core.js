@@ -465,12 +465,20 @@ function feedRowHTML(row, i) {
     <button type="button" class="btn btn-ghost btn-sm" onclick="feedDelRow(${i})">✕</button>
   </div>`;
 }
+/* 渲染前把已选食物从 DOM hidden input 同步回 _feedRows（防重建丢数据） */
+function syncFeedRowsFromDOM() {
+  _feedRows.forEach((r, i) => {
+    const hid = document.querySelector(`input[name="feedFood_${i}"]`);
+    if (hid) r.foodId = hid.value;
+  });
+}
 function feedRenderRows() {
   const box = document.getElementById('feedRows');
   if (box) box.innerHTML = _feedRows.map(feedRowHTML).join('');
 }
-function feedAddRow() { _feedRows.push({ foodId: '', grams: '' }); feedRenderRows(); }
+function feedAddRow() { syncFeedRowsFromDOM(); _feedRows.push({ foodId: '', grams: '' }); feedRenderRows(); }
 function feedDelRow(i) {
+  syncFeedRowsFromDOM();  /* 必须在 splice 前同步，否则删行重编号会串数据 */
   _feedRows.splice(i, 1);
   if (!_feedRows.length) _feedRows.push({ foodId: '', grams: '' });
   feedRenderRows();
