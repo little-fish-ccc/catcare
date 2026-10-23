@@ -131,7 +131,7 @@ function renderHome(el) {
   <div class="card">
     <h3>⏰ 健康提醒</h3>
     ${reminders.length ? reminders.map(r => `
-      <div class="remind-item"><span>${r.icon} ${esc(r.label)}<small style="color:var(--ink-3)"> ${esc(r.detail)}</small></span>
+      <div class="remind-item"${r.action ? ` style="cursor:pointer" onclick="${r.action}" title="点击填写记录"` : ''}><span>${r.icon} ${esc(r.label)}<small style="color:var(--ink-3)"> ${esc(r.detail)}</small></span>
       <span class="days-left ${r.days < 0 ? 'over' : r.soon ? 'soon' : ''}">${r.days < 0 ? '已逾期' + (-r.days) + '天' : r.days === 0 ? '就是今天' : '还有' + r.days + '天'}</span></div>`).join('')
       : `<div class="f-hint">暂无待提醒事项。记录驱虫、复诊或用药的"下次日期"后，会自动在这里倒计时提醒。</div>`}
   </div>`;
@@ -149,11 +149,11 @@ function sevClass(s) { return { '轻微': 'ok', '一般': 'info', '明显': 'war
 
 function buildReminders(catId) {
   const t = today(), out = [];
-  const push = (icon, label, detail, dateStr, soonDays) => {
+  const push = (icon, label, detail, dateStr, soonDays, action) => {
     if (!dateStr) return;
     const days = daysBetween(t, dateStr);
     if (days < -60) return;
-    out.push({ icon, label, detail, days, soon: days <= soonDays });
+    out.push({ icon, label, detail, days, soon: days <= soonDays, action });
   };
   // 驱虫：按类型取最近一条的下次日期
   ['外驱', '内驱'].forEach(tp => {
@@ -183,11 +183,11 @@ function buildReminders(catId) {
   };
   DB.medPlans.filter(p => p.catId === catId && !p.paused).forEach(p => {
     const d = nextPlanDay(p);
-    if (d) push('💊', d === t ? '今天需用药' : '下次用药', p.name + (p.dose ? '（' + p.dose + (p.unit || '') + '）' : ''), d, 1);
+    if (d) push('💊', d === t ? '今天需用药' : '下次用药', p.name + (p.dose ? '（' + p.dose + (p.unit || '') + '）' : ''), d, 1, `openPlanRecord('med','${p.id}')`);
   });
   DB.carePlans.filter(p => p.catId === catId && !p.paused).forEach(p => {
     const d = nextPlanDay(p);
-    if (d) push('🧼', d === t ? '今天需护理' : '下次护理', p.name, d, 1);
+    if (d) push('🧼', d === t ? '今天需护理' : '下次护理', p.name, d, 1, `openPlanRecord('care','${p.id}')`);
   });
   return out.sort((a, b) => a.days - b.days);
 }
@@ -506,6 +506,14 @@ const PLAN_MODULES = {
     dueText: '今日需护理'
   }
 };
+
+/* 首页健康提醒 → 点击跳转：预填计划/猫咪/日期，弹出记录表单，保存即完成记录 */
+function openPlanRecord(kind, planId) {
+  const M = PLAN_MODULES[kind];
+  const plan = (DB[M.planTable] || []).find(p => p.id === planId);
+  if (!plan) return;
+  openForm(M.recEnt, { catId: plan.catId, planId: plan.id, date: today() }, () => render());
+}
 
 function planFreqText(p) {
   if (!p.continuous) return '单次执行' + ((p.startDate || p.createdDate) ? ' · ' + (p.startDate || p.createdDate) : '');

@@ -48,10 +48,10 @@ ok(w.isPlanDay(plan, d30) === false, '1/15/30全部完成后，本月不再待�
 // 4. 提前记录(早于调度日)不计入当月该日完成
 const plan2 = { id: 'pM2', catId: 'c1', continuous: true, startDate: sd, endDate: ed, schedType: '按月', monthDays: ['每月15号'], paused: false, name: '半月护理' };
 DB.carePlans.push(plan2);
-const T2 = '2026-08-20';
-DB.careRecords.push({ id: 'r4', catId: 'c1', planId: 'pM2', date: '2026-08-05' }); // 早于本月15号
+const T2 = ym + '-20';  // 本月20号：恒晚于 startDate(T-60天)，且 day=20 ≥ 调度日15号
+DB.careRecords.push({ id: 'r4', catId: 'c1', planId: 'pM2', date: ym + '-05' }); // 早于本月15号
 ok(w.isPlanDay(plan2, T2) === true, '早于调度日记录不视为当月完成 → 仍待办');
-DB.careRecords.push({ id: 'r5', catId: 'c1', planId: 'pM2', date: '2026-08-25' }); // 本月15号之后
+DB.careRecords.push({ id: 'r5', catId: 'c1', planId: 'pM2', date: ym + '-25' }); // 本月15号之后
 ok(w.isPlanDay(plan2, T2) === false, '调度日之后完成 → 不再待办');
 
 // 5. 未选日期 / 暂停 / 未开始

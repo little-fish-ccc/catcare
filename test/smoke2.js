@@ -113,6 +113,19 @@ w.eval("go('home')");
 mainHTML = w.document.getElementById('main').innerHTML;
 ok(mainHTML.includes('需用药') || mainHTML.includes('下次用药'), '健康提醒含用药计划倒计时');
 
+// 12b. 健康提醒条目可点击 → 跳转预填记录表单（填写保存即记录）
+ok(/remind-item[^>]*onclick="openPlanRecord\('(med|care)'/.test(mainHTML), '用药/护理提醒条目带点击跳转');
+const actM = mainHTML.match(/onclick="(openPlanRecord\('(?:med|care)','[^']+'\))"/);
+if (actM) {
+  w.eval(actM[1]);
+  const prePlan = w.eval('getFD().planId');
+  ok(!!prePlan, '点击提醒弹出预填表单（已选对应计划）');
+  ok(w.eval('getFD().date') === w.eval('today()'), '预填日期为今天');
+  w.eval("setFD('result','已完成'); submitForm()");
+  ok(w.eval('DBref.medRecords.length') + w.eval('DBref.careRecords.length') >= 1, '保存后生成记录');
+  w.eval('closeModal()');
+}
+
 // 13. 日详情弹窗
 const catId = w.eval('DBref.cats[0].id');
 const d = w.eval('DBref.medRecords[0].date');
